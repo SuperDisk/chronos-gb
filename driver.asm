@@ -52,15 +52,22 @@ Music_Init:
   ld a, [Variables_6]
   ld [Music_Init_14+1], a
 
-  exx
+  ; exx
 
   ld de,Music_Melody      ; DE = melody
-  ld [Melody_RepeatPoint], DE
+
+  ; ld [Melody_RepeatPoint], DE
+  ld a, e
+  ld [Melody_RepeatPoint+0], a
+  ld [melodyDE+0], a
+  ld a, d
+  ld [Melody_RepeatPoint+1], a
+  ld [melodyDE+1], a
 
   ld a,1
   ld [Music_Init_34+1], a
 
-  exx
+  ; exx
 
 IX_CommandProcessor:
   ld a, [IX+0]             ; Read current byte for 3-tone portion
@@ -428,7 +435,12 @@ Music_Init_34:
   ld [Music_Init_14+1], a
   ld a, [Variables_4]
   ld [Variables_3], a
-  exx
+
+  ; exx
+  ld a, [melodyDE+0]
+  ld e, a
+  ld a, [melodyDE+1]
+  ld d, a
 DE_CommandProcessor:
   ld a, [DE]
   cp 2
@@ -541,7 +553,12 @@ Music_Init_41:
   ld a, [DE]
   ld [Music_Init_34+1], a
   INC DE
-  exx
+  ; exx
+  ld a, e
+  ld [melodyDE+0], a
+  ld a, d
+  ld [melodyDE+1], a
+
 Music_Init_42:
   ld a,1
   DEC A
@@ -965,7 +982,7 @@ L62994:
 L62994_0:
   xor a
   ; OUT (254), a             ; Beeper low
-  ld [rNR32], a
+  ldh [rNR32], a
   ld B,30
 L62994_1:
   djnz L62994_1
@@ -997,7 +1014,7 @@ L63022_0:
   jp nz,L63022_6          ; ?
   xor a
   ; OUT (254), a             ; Beeper low
-  ld [rNR32], a
+  ldh [rNR32], a
 L63022_1:
   ld C,113
 L63022_2:
@@ -1019,7 +1036,7 @@ L63022_6:
   jp nz,L63022_12         ; First note?
   xor a
   ; OUT (254), a             ; Beeper low
-  ld [rNR32], a
+  ldh [rNR32], a
 L63022_7:
   ld D,114
 L63022_8:
@@ -1041,7 +1058,7 @@ L63022_12:
   jp nz,L63022_18         ; Second note?
   xor a
   ; OUT (254), a             ; Beeper low
-  ld [rNR32], a
+  ldh [rNR32], a
 L63022_13:
   ld E,101
 L63022_14:
@@ -1063,7 +1080,7 @@ L63022_18:
   jp nz,L63022_24         ; Third note?
   xor a
   ; OUT (254), a             ; Beeper low
-  ld [rNR32], a
+  ldh [rNR32], a
 L63022_19:
   ld H,170
 L63022_20:
@@ -1092,7 +1109,7 @@ L63022_26:
   jp nz,L63022_25
   xor a
   ; OUT (254), a             ; Beeper low
-  ld [rNR32], a
+  ldh [rNR32], a
 L63022_27:
   ld L,151
 L63022_28:
@@ -1110,6 +1127,11 @@ L63022_31:
   DEC A
   jp nz,L63022_31
   jp L63022_25
+
+SECTION "conversion vars", WRAM0
+melodyDE: dw
+
+SECTION "vars", ROM0
 
 ; Data block at 63170 variables
 Variables:
