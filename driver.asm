@@ -232,7 +232,7 @@ Music_Init_7:
   ld a, [IX+0]
   INC IX
 Music_Init_8:
-  EX AF, aF'
+  ; EX AF, aF'
   xor a
   ; IN a,(254)
   ; CPL
@@ -668,11 +668,12 @@ Music_Init_53:
   XOR 1
   ld [Music_Init_53+1], a
   jp z,Music_Init_54
-  EX AF, aF'
+  ;; TODO: Seems to do nothing. Look into this more
+  ; EX AF, aF'
   jp Music_Init_8
 Music_Init_54:
-  EX AF, aF'
-  DEC A
+  ; EX AF, aF'
+  ; DEC A
   jp nz,Music_Init_8
   ld a,127
   ; IN a,(254)
@@ -868,7 +869,7 @@ L62845_2:
 L62876:
   ld bc,65533
   ld a,13
-  ;; TODO: Unknown what this is
+  ;; TODO: Unknown what port this is and why it does this.
   ; out (c), a
   ld bc,49149
   ld a,1
