@@ -153,11 +153,19 @@ IX_FFCommand08:
   jp IX_CommandProcessor
 IX_FFCommand04:
   ld HL,DrumPatternA
-  ld [Music_Init_22+1], HL
+  ; ld [Music_Init_22+1], HL
+  ld a, l
+  ld [Music_init_22+1], a
+  ld a, h
+  ld [Music_init_22+2], a
   jp IX_FFCommand02
 IX_FFCommand05:
   ld HL,DrumPatternB
-  ld [Music_Init_22+1], HL
+  ; ld [Music_Init_22+1], HL
+  ld a, l
+  ld [Music_init_22+1], a
+  ld a, h
+  ld [Music_init_22+2], a
   jp IX_FFCommand02
 IX_FFCommand02:
   xor a
