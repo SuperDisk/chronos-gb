@@ -10,6 +10,20 @@ MACRO djnz
   jr nz, \1
 ENDM
 
+MACRO readix
+  pop af
+  dec sp
+  dec sp
+ENDM
+
+MACRO incix
+  inc sp
+ENDM
+
+MACRO decix
+  dec sp
+ENDM
+
 INCLUDE "notes.asm"
 INCLUDE "macros.asm"
 
@@ -82,18 +96,45 @@ Music_Init:
 
   ; exx
 
+  ld a, l
+  ld [hlhack+0], a
+  ld a, h
+  ld [hlhack+1], a
+
+  ld [stackhack], sp
+
+  ld a, [chordsIX+0]
+  ld l, a
+  ld a, [chordsIX+1]
+  ld h, a
+
+  ld sp, hl
+  dec sp
+
+  ld a, [hlhack+0]
+  ld l, a
+  ld a, [hlhack+1]
+  ld h, a
+
 IX_CommandProcessor:
-  ld a, [IX+0]             ; Read current byte for 3-tone portion
+  ; ld a, [IX+0]             ; Read current byte for 3-tone portion
+  readix
+
   cp 2
   jp nz,Music_Init_1
 ; 02 xx = set repeat
-  INC IX
-  ld a, [IX+0]             ; Get repeat count
+  ; INC IX
+  incix
+  ; ld a, [IX+0]             ; Get repeat count
+  readix
   inc a
   ld [Music_Init_2+1], a   ; Set the repeat counter
-  INC IX
-  ld [Chord_RepeatPoint], ix     ; Store repeat point address
-  ld a, [IX+0]
+  ; INC IX
+  incix
+  ; ld [Chord_RepeatPoint], ix     ; Store repeat point address
+  ld [Chord_RepeatPoint], sp
+  ; ld a, [IX+0]
+  readix
   jp Music_Init_4         ; Read the next byte
 Music_Init_1:
   cp 1
@@ -104,26 +145,28 @@ Music_Init_2:
   DEC A                   ; A is the repeat counter
   jp nz,Music_Init_3      ; If the counter hasn't ran out, go back to loop
                           ; point
-  INC IX
+  ; INC IX
+  incix
   jp IX_CommandProcessor  ; Read the next byte
 Music_Init_3:
   ld [Music_Init_2+1], a   ; Save repeat counter
   ; ld ix, [Chord_RepeatPoint]     ; Load saved repeat point
-  ld a, [Chord_RepeatPoint+0]
-  ld [chordsIX+0], a
-  ld a, [Chord_RepeatPoint+1]
-  ld [chordsIX+1], a
+  jp load_sp_hack
 
-  ld a, [IX+0]
+  ; ld a, [IX+0]
+  readix
 Music_Init_4:
   AND A
   jp z,StopMusic          ; If current byte = 0, stop the music entirely
   cp 255
   jp nz,Music_Init_5      ; If current byte != 255, process some notes
 ; FF xx aa bb .. = special command for setting effects and envelopes
-  INC IX                  ; Begin processing effects
-  INC IX                  ; IX now points to the first argument
-  ld a, [IX-1]             ; Check command byte
+  ; INC IX                  ; Begin processing effects
+  ; INC IX                  ; IX now points to the first argument
+  ; ld a, [IX-1]             ; Check command byte
+  incix
+  readix
+  incix
   cp 1
   jp z, IX_FFCommand01     ; 1 set envelope
   cp 2
@@ -150,25 +193,27 @@ IX_FFCommand0a:
   ld [Music_Init_42+1], a  ; Use 3 channels
   jp IX_CommandProcessor
 IX_FFCommand08:
-  ld a, [IX+0]
-  INC IX
+  ; ld a, [IX+0]
+  ; INC IX
+  readix
+  incix
   ld [Music_Init_24+1], a
   jp IX_CommandProcessor
 IX_FFCommand04:
   ld HL,DrumPatternA
   ; ld [Music_Init_22+1], HL
   ld a, l
-  ld [Music_init_22+1], a
+  ld [Music_Init_22+1], a
   ld a, h
-  ld [Music_init_22+2], a
+  ld [Music_Init_22+2], a
   jp IX_FFCommand02
 IX_FFCommand05:
   ld HL,DrumPatternB
   ; ld [Music_Init_22+1], HL
   ld a, l
-  ld [Music_init_22+1], a
+  ld [Music_Init_22+1], a
   ld a, h
-  ld [Music_init_22+2], a
+  ld [Music_Init_22+2], a
   jp IX_FFCommand02
 IX_FFCommand02:
   xor a
@@ -183,19 +228,27 @@ IX_FFCommand03:
   ld [Music_Init_21+1], a
   jp IX_CommandProcessor
 IX_FFCommand01:
-  ld a, [IX+0]             ; Attack?
+  ; ld a, [IX+0]             ; Attack?
+  readix
+  incix
   ld [Variables_0], a
   ld [Variables], a
-  ld a, [IX+1]             ; Decay target?
+  ; ld a, [IX+1]             ; Decay target?
+  readix
+  incix
   ld [Variables_1], a
-  ld a, [IX+2]             ; Decay rate?
+  ; ld a, [IX+2]             ; Decay rate?
+  readix
+  incix
   ld [Variables_2], a
-  ld a, [IX+3]             ; ???
+  ; ld a, [IX+3]             ; ???
+  readix
+  incix
   ld [L62747_2+1], a
-  INC IX                  ; Move IX to next music data
-  INC IX
-  INC IX
-  INC IX
+  ; INC IX                  ; Move IX to next music data
+  ; INC IX
+  ; INC IX
+  ; INC IX
   jp IX_CommandProcessor  ; Read next byte
 Music_Init_5:
   ld a, [Variables_0]
@@ -204,15 +257,28 @@ Music_Init_5:
   ld [Music_Init_47+1], a
   ld a, [Variables_2]
   ld [L62747+1], a
-  ld D, [IX+2]             ; E,H contains the notes
-  ld E, [IX+0]             ; D contains the length / note
-  ld H, [IX+1]
-  INC IX
-  INC IX
+
+  ; ld D, [IX+2]             ; E,H contains the notes
+  ; ld E, [IX+0]             ; D contains the length / note
+  ; ld H, [IX+1]
+  readix
+  incix
+  ld e, a
+
+  readix
+  incix
+  ld h, a
+
+  readix
+  ld d, a
+
+  ; INC IX
+  ; INC IX
   ld a, [Music_Init_42+1]
   DEC A                   ; A = 0 if using 2 channels
   jp z,Music_Init_6
-  INC IX
+  ; INC IX
+  incix
 Music_Init_6:
   ld a, [Variables]
   AND A
@@ -255,8 +321,31 @@ Music_Init_6:
 Music_Init_7:
   ld a,0
   ld [Music_Init_53+1], a
-  ld a, [IX+0]
-  INC IX
+  ; ld a, [IX+0]
+  ; INC IX
+  readix
+  incix
+
+  ;; SAVE IX HERE
+  inc sp
+  ld [chordsIX], sp
+
+  ld a, l
+  ld [hlhack+0], a
+  ld a, h
+  ld [hlhack+1], a
+
+  ld a, [stackhack+0]
+  ld l, a
+  ld a, [stackhack+1]
+  ld h, a
+  ld sp, hl
+
+  ld a, [hlhack+0]
+  ld l, a
+  ld a, [hlhack+1]
+  ld h, a
+
 Music_Init_8:
   ; EX AF, aF'
   xor a
@@ -1191,37 +1280,157 @@ L63022_31:
   jp L63022_25
 
 SECTION "conversion vars", WRAM0
+stackhack: dw
+hlhack: dw
+
 melodyDE: dw
 chordsIX: dw
 bassIY: dw
 
-SECTION "vars", ROM0
+SECTION "vars", WRAM0
 
 ; Data block at 63170 variables
-Variables:
-  db 0
+Variables::
+  db ;0
 Variables_0:
-  db 0
+  db ;0
 Variables_1:
-  db 0
+  db ;0
 Variables_2:
-  db 2
+  db ;2
 Variables_3:
-  db 0
+  db ;0
 Variables_4:
-  db 0
+  db ;0
 Variables_5:
-  db 1
+  db ;1
 Variables_6:
+  db ;2
+  db ;0
+load_sp_hack:
+  db ;$31 ; ld sp, xxx
+Melody_RepeatPoint:
+  dw ;0 ; insert pointer here
+  db ;0
+Bass_RepeatPoint:
+  dw ;0 ; insert pointer here
+  db ;0
+Chord_RepeatPoint:
+  dw ;0 ; insert pointer here
+  ; db 0,255
+  ds 2
+
+
+; drum pattern 1
+; format: <length> <note>
+; 0 = kick
+; 1 = stick
+; 2 = kick2?
+; 3 = SNARE
+; 4 = hihat
+; 5 = pedal hat?
+DrumPatternA:
+  ; db 8,0
+  ; db 8,2
+  ; db 4,3
+  ; db 2,0
+  ; db 4,3
+  ; db 2,0
+  ; db 2,3
+  ; db 2,0
+  ; db $ff, $ff
+  ds 18
+
+; drum pattern 2
+; format: <length> <note>
+DrumPatternB:
+  ; db 8,0
+  ; db 8,3
+  ; db 6,0
+  ; db 2,0
+  ; db 2,3
+  ; db 4,0
+  ; db 2,4
+  ; db 8,0
+  ; db 4,3
+  ; db 4,0
+  ; db 8,0
+  ; db 4,3
+  ; db 2,0
+  ; db 2,0
+  ; db 8,0
+  ; db 8,3
+  ; db 6,0
+  ; db 2,0
+  ; db 2,3
+  ; db 6,0
+  ; db 8,0
+  ; db 4,3
+  ; db 4,0
+  ; db 8,0
+  ; db 2,1
+  ; db 2,3
+  ; db 4,3
+  ; db $ff, $ff
+  ds 28*2
+
+AY_Snare:
+  ; db 7,55,11
+  ds 3
+  db ;0
+
+  ; db 12,8,13,1,8,17,6
+  ds 7
+  ; db 5,8,16,0,0
+  ds 5
+
+Variables_10:
+  ; db 101,33,5
+  ds 3
+  ; db 113,42,1,113,41,2,113,41
+  ds 8
+  ; db 2,113,40,3,113,40,3,113
+  ds 8
+  ; db 39,4,113,39,4,113,38,5
+  ds 8
+  ; db 101,37,1,101,36,2,101,36
+  ds 8
+  ; db 2,101,35,3,101,35,3,101
+  ds 8
+  ; db 34,4
+  ds 2
+variables_end::
+
+SECTION "initial vals", ROM0
+
+initial_vals::
+; Data block at 63170 variables
+; Variables:
+  db 0
+; Variables_0:
+  db 0
+; Variables_1:
+  db 0
+; Variables_2:
+  db 2
+; Variables_3:
+  db 0
+; Variables_4:
+  db 0
+; Variables_5:
+  db 1
+; Variables_6:
   db 2
   db 0
-Melody_RepeatPoint:
+; load_sp_hack:
+  db $31 ; ld sp, xxx
+; Melody_RepeatPoint:
   dw 0 ; insert pointer here
   db 0
-Bass_RepeatPoint:
+; Bass_RepeatPoint:
   dw 0 ; insert pointer here
   db 0
-Chord_RepeatPoint:
+; Chord_RepeatPoint:
   dw 0 ; insert pointer here
   db 0,255
 
@@ -1234,7 +1443,7 @@ Chord_RepeatPoint:
 ; 3 = SNARE
 ; 4 = hihat
 ; 5 = pedal hat?
-DrumPatternA:
+; DrumPatternA:
   db 8,0
   db 8,2
   db 4,3
@@ -1247,7 +1456,7 @@ DrumPatternA:
 
 ; drum pattern 2
 ; format: <length> <note>
-DrumPatternB:
+; DrumPatternB:
   db 8,0
   db 8,3
   db 6,0
@@ -1277,14 +1486,14 @@ DrumPatternB:
   db 4,3
   db $ff, $ff
 
-AY_Snare:
+; AY_Snare:
   db 7,55,11
   db 0
 
   db 12,8,13,1,8,17,6
   db 5,8,16,0,0
 
-Variables_10:
+; Variables_10:
   db 101,33,5
   db 113,42,1,113,41,2,113,41
   db 2,113,40,3,113,40,3,113
@@ -1292,3 +1501,6 @@ Variables_10:
   db 101,37,1,101,36,2,101,36
   db 2,101,35,3,101,35,3,101
   db 34,4
+initial_vals_end:
+
+ASSERT (variables_end - Variables) == (initial_vals_end - initial_vals)
