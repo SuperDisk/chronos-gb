@@ -26,10 +26,20 @@ INCLUDE "chronos_title.asm"
 Music_Init:
   di                      ; Disable interrupts, since perfect timing is needed
 
-  ld ix,Music_Chords       ; IX = chords
-  ld [Chord_RepeatPoint], ix
+  ; ld ix,Music_Chords       ; IX = chords
+  ; ld [Chord_RepeatPoint], ix
+  ld a, LOW(Music_Chords)
+  ld [Chord_RepeatPoint+0], a
+  ld [chordsIX+0], a
+  ld a, HIGH(Music_Chords)
+  ld [Chord_RepeatPoint+1], a
+  ld [chordsIX+1], a
 
-  ld iy,Music_Bass        ; IY = bass
+  ; ld iy,Music_Bass        ; IY = bass
+  ld a, LOW(Music_Bass)
+  ld [bassIY+0], a
+  ld a, HIGH(Music_Bass)
+  ld [bassIY+1], a
 
 ; initialize all variables
   xor a
@@ -95,7 +105,12 @@ Music_Init_2:
   jp IX_CommandProcessor  ; Read the next byte
 Music_Init_3:
   ld [Music_Init_2+1], a   ; Save repeat counter
-  ld ix, [Chord_RepeatPoint]     ; Load saved repeat point
+  ; ld ix, [Chord_RepeatPoint]     ; Load saved repeat point
+  ld a, [Chord_RepeatPoint+0]
+  ld [chordsIX+0], a
+  ld a, [Chord_RepeatPoint+1]
+  ld [chordsIX+1], a
+
   ld a, [IX+0]
 Music_Init_4:
   AND A
@@ -681,12 +696,14 @@ Music_Init_54:
   ; jp nz, IX_CommandProcessor
   jp IX_CommandProcessor
 StopMusic:
-  ld iy,23610
-  ld a, [Music_Init_36+1]
-  ld C, a
-  ld B,0
-  EI
-  RET
+  ;; explode
+  rst $38
+  ; ld iy,23610
+  ; ld a, [Music_Init_36+1]
+  ; ld C, a
+  ; ld B,0
+  ; EI
+  ; RET
 
 ; Routine at 62613
 ;
@@ -1131,6 +1148,8 @@ L63022_31:
 
 SECTION "conversion vars", WRAM0
 melodyDE: dw
+chordsIX: dw
+bassIY: dw
 
 SECTION "vars", ROM0
 
