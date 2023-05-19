@@ -390,16 +390,32 @@ Music_Init_28:
   DEC A
   ld [Music_Init_28+1], a
   jp nz,Music_Init_34
+
+  push de
+  ld a, [bassIY+0]
+  ld e, a
+  ld a, [bassIY+1]
+  ld d, a
 IY_CommandProcessor:
-  ld a, [IY+0]
+  ; ld a, [IY+0]
+  ld a, [de]
   cp 2
   jp nz,Music_Init_29
-  INC IY                  ; 02 xx Set repeat
-  ld a, [IY+0]
+  ; INC IY                  ; 02 xx Set repeat
+  inc de
+  ; ld a, [IY+0]
+  ld a, [de]
   inc a
   ld [Music_Init_30+1], a
-  INC IY
-  ld [Bass_RepeatPoint], iy
+  ; INC IY
+  inc de
+
+  ; ld [Bass_RepeatPoint], iy
+  ld a, e
+  ld [Bass_RepeatPoint+0], a
+  ld a, d
+  ld [Bass_RepeatPoint+1], a
+
   jp IY_CommandProcessor
 Music_Init_29:
   cp 1
@@ -409,20 +425,28 @@ Music_Init_30:
   DEC A
   jp z,Music_Init_31
   ld [Music_Init_30+1], a
-  ld iy, [Bass_RepeatPoint]
+  ; ld iy, [Bass_RepeatPoint]
+  ld a, [Bass_RepeatPoint+0]
+  ld e, a
+  ld a, [Bass_RepeatPoint+1]
+  ld d, a
   jp IY_CommandProcessor
 Music_Init_31:
-  INC IY
+  ; INC IY
+  inc de
   jp IY_CommandProcessor
 Music_Init_32:
   cp 3
   jp nz,Music_Init_33
-  INC IY                  ; 03 xx unknown
-  ld a, [IY+0]
+  ; INC IY                  ; 03 xx unknown
+  inc de
+  ; ld a, [IY+0]
+  ld a, [de]
   ld [Music_Init_10+1], a
   DEC A
   ld [Music_Init_9+1], a
-  INC IY
+  ; INC IY
+  inc de
   jp IY_CommandProcessor
 Music_Init_33:
   ld [L63022_27+1], a      ; Process note
@@ -436,11 +460,20 @@ Music_Init_33:
   ld L, a
   ld a,1
   ld [L63022_30+1], a
-  ld a, [IY+1]
+  ; ld a, [IY+1]
+  inc de
+  ld a, [de]
   ld [Music_Init_28+1], a
-  INC IY
-  INC IY
+  ; INC IY
+  ; INC IY
+  inc de
 Music_Init_34:
+  ld a, e
+  ld [bassIY+0], a
+  ld a, d
+  ld [bassIY+1], a
+  pop de
+
   ld a,1                  ; Note length
   DEC A
   ld [Music_Init_34+1], a
