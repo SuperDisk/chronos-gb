@@ -37,8 +37,10 @@ Music_Init:
 
   ; ld iy,Music_Bass        ; IY = bass
   ld a, LOW(Music_Bass)
+  ld [Bass_RepeatPoint+0], a
   ld [bassIY+0], a
   ld a, HIGH(Music_Bass)
+  ld [Bass_RepeatPoint+1], a
   ld [bassIY+1], a
 
 ; initialize all variables
@@ -51,7 +53,8 @@ Music_Init:
   ld [Music_Init_28+1], a
   ld [Music_Init_40+1], a
 
-  ld [Bass_RepeatPoint], iy
+  ; Saved to this location just above
+  ; ld [Bass_RepeatPoint], iy
 
   ld a, [Variables_4]
   ld [Variables_3], a
