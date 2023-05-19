@@ -124,6 +124,7 @@ Music_Init:
   ld h, a
 
 IX_CommandProcessor:
+  ; jp nochords
   ; ld a, [IX+0]             ; Read current byte for 3-tone portion
   readix
 
@@ -333,7 +334,9 @@ Music_Init_7:
   ; INC IX
   readix
   incix
+  ld [exaf], a
 
+nochords:
   ;; SAVE IX HERE
   inc sp
   ld [chordsIX], sp
@@ -825,12 +828,13 @@ Music_Init_53:
   XOR 1
   ld [Music_Init_53+1], a
   jp z,Music_Init_54
-  ;; TODO: Seems to do nothing. Look into this more
   ; EX AF, aF'
   jp Music_Init_8
 Music_Init_54:
   ; EX AF, aF'
-  ; DEC A
+  ld a, [exaf]
+  DEC A
+  ld [exaf], a
   jp nz,Music_Init_8
   ld a,127
   ; IN a,(254)
@@ -1311,6 +1315,7 @@ L63022_31:
 
 stackhack: dw 0
 hlhack: dw 0
+exaf: db 0
 
 melodyDE: dw 0
 chordsIX: dw 0
