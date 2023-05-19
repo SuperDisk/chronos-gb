@@ -34,7 +34,14 @@ INCLUDE "macros.asm"
 ;
 ; must contain the following labels:
 ; Music_Data, Music_Chords, Music_Bass, Music_Melody
+
+SECTION "musicdata", ROM0
 INCLUDE "chronos_title.asm"
+
+SECTION "driver", ROM0
+
+RAMCode:
+LOAD "driver ram code", WRAM0
 
 ; music init
 Music_Init:
@@ -152,6 +159,7 @@ Music_Init_3:
   ld [Music_Init_2+1], a   ; Save repeat counter
   ; ld ix, [Chord_RepeatPoint]     ; Load saved repeat point
   jp load_sp_hack
+donehack:
 
   ; ld a, [IX+0]
   readix
@@ -567,13 +575,14 @@ Music_Init_33:
   ; INC IY
   ; INC IY
   inc de
-Music_Init_34:
+  ;; save DE as IY in its reg and restore DE
   ld a, e
   ld [bassIY+0], a
   ld a, d
   ld [bassIY+1], a
   pop de
 
+Music_Init_34:
   ld a,1                  ; Note length
   DEC A
   ld [Music_Init_34+1], a
@@ -827,6 +836,27 @@ Music_Init_54:
   ; IN a,(254)
   ; AND 1
   ; jp nz, IX_CommandProcessor
+
+  ld a, l
+  ld [hlhack+0], a
+  ld a, h
+  ld [hlhack+1], a
+
+  ld [stackhack], sp
+
+  ld a, [chordsIX+0]
+  ld l, a
+  ld a, [chordsIX+1]
+  ld h, a
+
+  ld sp, hl
+  dec sp
+
+  ld a, [hlhack+0]
+  ld l, a
+  ld a, [hlhack+1]
+  ld h, a
+
   jp IX_CommandProcessor
 StopMusic:
   ;; explode
@@ -1279,46 +1309,44 @@ L63022_31:
   jp nz,L63022_31
   jp L63022_25
 
-SECTION "conversion vars", WRAM0
-stackhack: dw
-hlhack: dw
+stackhack: dw 0
+hlhack: dw 0
 
-melodyDE: dw
-chordsIX: dw
-bassIY: dw
-
-SECTION "vars", WRAM0
+melodyDE: dw 0
+chordsIX: dw 0
+bassIY: dw 0
 
 ; Data block at 63170 variables
-Variables::
-  db ;0
+Variables:
+  db 0
 Variables_0:
-  db ;0
+  db 0
 Variables_1:
-  db ;0
+  db 0
 Variables_2:
-  db ;2
+  db 2
 Variables_3:
-  db ;0
+  db 0
 Variables_4:
-  db ;0
+  db 0
 Variables_5:
-  db ;1
+  db 1
 Variables_6:
-  db ;2
-  db ;0
-load_sp_hack:
-  db ;$31 ; ld sp, xxx
+  db 2
+  db 0
 Melody_RepeatPoint:
-  dw ;0 ; insert pointer here
-  db ;0
+  dw 0 ; insert pointer here
+  db 0
 Bass_RepeatPoint:
-  dw ;0 ; insert pointer here
-  db ;0
+  dw 0 ; insert pointer here
+  db 0
+load_sp_hack:
+  db $31 ; ld sp, xxx
 Chord_RepeatPoint:
-  dw ;0 ; insert pointer here
-  ; db 0,255
-  ds 2
+  dw 0 ; insert pointer here
+  ; db 0;,255
+  db $C3
+  dw donehack
 
 
 ; drum pattern 1
@@ -1330,120 +1358,6 @@ Chord_RepeatPoint:
 ; 4 = hihat
 ; 5 = pedal hat?
 DrumPatternA:
-  ; db 8,0
-  ; db 8,2
-  ; db 4,3
-  ; db 2,0
-  ; db 4,3
-  ; db 2,0
-  ; db 2,3
-  ; db 2,0
-  ; db $ff, $ff
-  ds 18
-
-; drum pattern 2
-; format: <length> <note>
-DrumPatternB:
-  ; db 8,0
-  ; db 8,3
-  ; db 6,0
-  ; db 2,0
-  ; db 2,3
-  ; db 4,0
-  ; db 2,4
-  ; db 8,0
-  ; db 4,3
-  ; db 4,0
-  ; db 8,0
-  ; db 4,3
-  ; db 2,0
-  ; db 2,0
-  ; db 8,0
-  ; db 8,3
-  ; db 6,0
-  ; db 2,0
-  ; db 2,3
-  ; db 6,0
-  ; db 8,0
-  ; db 4,3
-  ; db 4,0
-  ; db 8,0
-  ; db 2,1
-  ; db 2,3
-  ; db 4,3
-  ; db $ff, $ff
-  ds 28*2
-
-AY_Snare:
-  ; db 7,55,11
-  ds 3
-  db ;0
-
-  ; db 12,8,13,1,8,17,6
-  ds 7
-  ; db 5,8,16,0,0
-  ds 5
-
-Variables_10:
-  ; db 101,33,5
-  ds 3
-  ; db 113,42,1,113,41,2,113,41
-  ds 8
-  ; db 2,113,40,3,113,40,3,113
-  ds 8
-  ; db 39,4,113,39,4,113,38,5
-  ds 8
-  ; db 101,37,1,101,36,2,101,36
-  ds 8
-  ; db 2,101,35,3,101,35,3,101
-  ds 8
-  ; db 34,4
-  ds 2
-variables_end::
-
-SECTION "initial vals", ROM0
-
-initial_vals::
-; Data block at 63170 variables
-; Variables:
-  db 0
-; Variables_0:
-  db 0
-; Variables_1:
-  db 0
-; Variables_2:
-  db 2
-; Variables_3:
-  db 0
-; Variables_4:
-  db 0
-; Variables_5:
-  db 1
-; Variables_6:
-  db 2
-  db 0
-; load_sp_hack:
-  db $31 ; ld sp, xxx
-; Melody_RepeatPoint:
-  dw 0 ; insert pointer here
-  db 0
-; Bass_RepeatPoint:
-  dw 0 ; insert pointer here
-  db 0
-; Chord_RepeatPoint:
-  dw 0 ; insert pointer here
-  db 0,255
-
-
-; drum pattern 1
-; format: <length> <note>
-; 0 = kick
-; 1 = stick
-; 2 = kick2?
-; 3 = SNARE
-; 4 = hihat
-; 5 = pedal hat?
-; DrumPatternA:
   db 8,0
   db 8,2
   db 4,3
@@ -1456,7 +1370,7 @@ initial_vals::
 
 ; drum pattern 2
 ; format: <length> <note>
-; DrumPatternB:
+DrumPatternB:
   db 8,0
   db 8,3
   db 6,0
@@ -1486,14 +1400,14 @@ initial_vals::
   db 4,3
   db $ff, $ff
 
-; AY_Snare:
+AY_Snare:
   db 7,55,11
   db 0
 
   db 12,8,13,1,8,17,6
   db 5,8,16,0,0
 
-; Variables_10:
+Variables_10:
   db 101,33,5
   db 113,42,1,113,41,2,113,41
   db 2,113,40,3,113,40,3,113
@@ -1501,6 +1415,5 @@ initial_vals::
   db 101,37,1,101,36,2,101,36
   db 2,101,35,3,101,35,3,101
   db 34,4
-initial_vals_end:
-
-ASSERT (variables_end - Variables) == (initial_vals_end - initial_vals)
+ramcode_end:
+ENDL
